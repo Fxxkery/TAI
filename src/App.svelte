@@ -3,72 +3,111 @@
   import {
     state, rate,
     unlockEra, buyAgent, buyUpgrade,
-    RESEARCH, buyResearch, chooseEraFocus, agentCost,
+    RESEARCH, buyResearch, chooseEraFocus, agentCost, // added
     startHunt, claimHunt, toggleDevPanel, exportSave, importSave, startTicker
   } from './lib/stores.js'
 
   let showPanel = 'none' // 'hunts' | 'research' | 'none'
   let eraMenu = false
-  onMount(()=>{ startTicker(); 
-    // ticker is already started in user's stores.js on load; if not, toggleDevPanel keeps logic isolated.
-  })
+  let menuOpen = false
+  let statsOpen = false
+  let showTooltips = true
+  let exportText = ''; // needed by the menu's Export Save
+
+  function forceSave(){
+    let snap; state.update(s => (snap = s, s));
+    localStorage.setItem('tra_idle_save_v5_js', JSON.stringify(snap));
+  }
+
+  function onImport(e){
+    const f = e.target.files?.[0]; if(!f) return;
+    const rd = new FileReader();
+    rd.onload = () => { try { importSave(rd.result); window.location.reload(); } catch {} };
+    rd.readAsText(f);
+  }
+
+  onMount(() => {
+    startTicker();
+    // ticker is already started in user's stores.js on load; if not, toggleDevPanel
+  });
 
   // helpers
-  function fmt(n){ if(n===undefined||n===null) return '0'; const s = $state?.formatShort; const num = Number(n)||0; if(!s) return num.toLocaleString(); const k=['','K','M','B','T']; let i=0, v=num; while(v>=1000 && i<k.length-1){ v/=1000; i++ } return (i? v.toFixed(2):Math.floor(v)).toLocaleString()+k[i] }
+  function fmt(n){ 
+    if(n===undefined||n===null) return '0'; 
+    const s = $state?.formatShort; 
+    const num = Number(n)||0; 
+    if(!s) return num.toLocaleString(); 
+    const k=['','K','M','B','T']; 
+    let i=0, v=num; 
+    while(v>=1000 && i<k.length-1){ v/=1000; i++ } 
+    return (i? v.toFixed(2):Math.floor(v)).toLocaleString()+k[i] 
+  }
+  
   const eraName = (e) => e?.name || '—'
-  const TITLE = 'Temporal Repair Agency'
-  function resPerSec(e){ return (e?.resourceRatePerAgent||0) * (e?.agentsOwned||0) * ($state?.boost||1) }
+
+  // added: resPerSec helper
+  function resPerSec(e){
+    return (e?.resourceRatePerAgent || 0) * (e?.agentsOwned || 0) * ($state?.boost || 1)
+  }
 </script>
 
 <!-- Top bar -->
 <header class="tva-topbar">
-  <div class="topbar-left"><div class="brand">{TITLE}</div>
+  <div class="topbar-left">
     <div class="pill pill-primary">CE <b>{fmt($state?.ce)}</b> <span class="rate">(+{fmt($rate)}/s)</span></div>
-    <div class="pill">{`Insights: ${fmt($state?.insights||0)}`}</div>
-    <div class="pill">{`Unlocked: ${$state?.unlockedCount||1}`}</div>
+    <div class="pill">Insights: <b>{fmt($state?.insights||0)}</b></div>
+    <div class="pill">Unlocked: <b>{$state?.unlockedCount||1}</b></div>
   </div>
 
-  <!-- Era-specific resources dropdown on hover -->
   <div class="topbar-right">
-  <div class="main-menu">
-    <button class="btn secondary small" on:click={()=> menuOpen = !menuOpen} aria-expanded={menuOpen}>☰ Menu</button>
-    {#if menuOpen}
-      <div class="dropdown-panel">
-        <div class="section">Save / Load</div>
-        <button class="btn" on:click={()=>forceSave()}>Save Now</button>
-        <button class="btn" on:click={()=>window.location.reload()}>Load (Reload)</button>
-        <hr/>
-        <div class="section">Settings</div>
-        <label class="row"><input type="checkbox" bind:checked={showTooltips}> <span>Tooltips</span></label>
-        <hr/>
-        <div class="section">Stats</div>
-        <button class="btn" on:click={()=>{ statsOpen = true; menuOpen = false; }}>Open Stats</button>
-        <hr/>
-        <div class="section">Developer</div>
-        <button class="btn" on:click={toggleDevPanel}>Toggle Dev Tools</button>
-        <hr/>
-        <div class="section">Data</div>
-        <button class="btn" on:click={()=> exportText = exportSave()}>Export Save</button>
-        <label class="row">
-          <span class="btn">Import Save</span>
-          <input class="file" type="file" accept=".json,application/json" on:change={onImport}/>
-        </label>
-        <div class="muted small">v{$state?.version || 5}</div>
-      </div>
-    {/if}
-  </div>
-</div>
-      <div class="menu">
-        {#each $state?.eras as e}
-          <div class="menu-row">
-            <span class="tag">{eraName(e)}</span>
-            <span class="mono">{fmt(e.resource)}</span>
-          </div>
-        {/each}
-      </div>
+    <div class="main-menu">
+      <button class="btn secondary small" on:click={()=> menuOpen = !menuOpen} aria-expanded={menuOpen}>☰ Menu</button>
+      {#if menuOpen}
+        <div class="dropdown-panel">
+          <div class="section">Save / Load</div>
+          <button class="btn" on:click={()=>forceSave()}>Save Now</button>
+          <button class="btn" on:click={()=>window.location.reload()}>Load (Reload)</button>
+          <hr/>
+          <div class="section">Settings</div>
+          <label class="row"><input type="checkbox" bind:checked={showTooltips}> <span>Tooltips</span></label>
+          <hr/>
+          <div class="section">Stats</div>
+          <button class="btn" on:click={()=>{ statsOpen = true; menuOpen = false; }}>Open Stats</button>
+          <hr/>
+          <div class="section">Developer</div>
+          <button class="btn" on:click={toggleDevPanel}>Toggle Dev Tools</button>
+          <hr/>
+          <div class="section">Data</div>
+          <button class="btn" on:click={()=> exportText = exportSave()}>Export Save</button>
+          <label class="row">
+            <span class="btn">Import Save</span>
+            <input class="file" type="file" accept=".json,application/json" on:change={onImport}/>
+          </label>
+          <div class="muted small">v{$state?.version || 5}</div>
+        </div>
+      {/if}
     </div>
   </div>
 </header>
+
+<!-- Toggle row -->
+<nav class="toggle-row">
+  <button class="btn" on:click={() => showPanel = 'hunts'}>Hunts</button>
+  <button class="btn" on:click={() => showPanel = 'research'}>Research</button>
+  <div class="dropdown">
+    <button class="btn" on:click={() => eraMenu = !eraMenu}>Era Resources</button>
+    {#if eraMenu}
+      <div class="dropdown-panel">
+        {#each $state?.eras || [] as era}
+          {#if era.unlocked}
+            <div class="row">{era.name} — {fmt(era.resource || 0)}</div>
+          {/if}
+        {/each}
+      </div>
+    {/if}
+  </div>
+</nav>
+
 
 <!-- Toggle buttons -->
 <nav class="tva-togglebar">
