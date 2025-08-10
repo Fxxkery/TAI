@@ -35,9 +35,7 @@ body:before{
 ::-webkit-scrollbar{ width:10px; height:10px }
 ::-webkit-scrollbar-thumb{
   background: rgba(93,79,68,.35);
-  border-radius: 6px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  border-radius: 6px; border: 2px solid transparent; background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover{ background: rgba(93,79,68,.55) }
 ::-webkit-scrollbar-track{ background: transparent }
@@ -59,7 +57,7 @@ body:before{
 }
 .banner-inner{
   padding: var(--s-16);
-  display:grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; gap: var(--s-12);
+  display:grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto auto; gap: var(--s-12);
   align-items:center;
 }
 .brand{
@@ -82,7 +80,7 @@ body:before{
 }
 .stat-pill.tva{ background: var(--tva); color:#fff; border-color: var(--tva) }
 
-/* Buttons in banner */
+/* Buttons */
 .btn{
   appearance:none; cursor:pointer; border-radius: var(--r-btn);
   border:1px solid var(--line); background: var(--paper);
@@ -104,7 +102,6 @@ body:before{
   background: var(--olive); color:#fff; border-color: var(--olive);
   border-radius: var(--r-pill); padding: 8px 14px;
 }
-.btn.olive-link:hover{ background: var(--olive-h); border-color: var(--olive-h) }
 .menu-pill{
   background: var(--paper);
   color: var(--ink-2);
@@ -117,7 +114,7 @@ body:before{
 /* ===== Page content ===== */
 .wrap{ padding: var(--s-16); }
 
-/* Resource chips strip */
+/* Resource chips strip (aligned) */
 .card{
   background: var(--paper-raised);
   border:1px solid var(--line); border-radius: var(--r-card);
@@ -129,15 +126,18 @@ body:before{
   margin-bottom: var(--s-16);
 }
 .res-chip{
-  display:grid; grid-template-columns: 10px auto auto auto; gap: 10px;
-  align-items:center; padding:6px 10px;
+  display:grid; grid-template-columns: 10px 160px 100px 110px; /* align columns */
+  align-items:center; gap: 10px;
+  padding:6px 10px;
   border:1px solid var(--hairline); border-radius: 999px;
   background: var(--paper);
   font-size: 13px;
+  font-variant-numeric: tabular-nums;
 }
 .res-chip .dot{ width:8px; height:8px; border-radius:999px; background: var(--teal) }
-.res-chip .res-name{ min-width:140px; text-transform:capitalize; color:var(--ink-2) }
-.res-chip .res-rate{ color:var(--ink-3) }
+.res-chip .res-name{ text-transform:capitalize; color:var(--ink-2) }
+.res-chip .res-rate{ color:var(--ink-3); text-align:right }
+.res-chip .res-amt{ text-align:right; font-weight:600; color:var(--ink) }
 .res-chip.dim{ opacity:.55 }
 
 /* ===== Horizontal era strip ===== */
@@ -162,10 +162,7 @@ body:before{
   box-shadow: var(--shadow);
   display:flex; flex-direction:column;
 }
-.era-card--strip{
-  flex: 0 0 300px;       /* single-row tiles */
-  scroll-snap-align: start;
-}
+.era-card--strip{ flex: 0 0 300px; scroll-snap-align: start; }
 
 .era-card-head{
   display:flex; align-items:center; justify-content:space-between;
@@ -185,7 +182,6 @@ body:before{
 .pill.ok{ color:#fff; background: rgba(59,125,79,.92); border-color: rgba(59,125,79,.9); }
 
 .era-cta{ padding: var(--s-16); padding-bottom: var(--s-8); }
-
 .era-upgrades{ padding: 0 var(--s-16) var(--s-16); }
 .upg-head{ color: var(--ink-3); margin: 0 0 var(--s-8); font-weight:600; }
 .upg-row{
@@ -196,3 +192,20 @@ body:before{
 .upg-row:last-child{ border-bottom: 0; }
 .upg-title{ font-weight:600 }
 .muted{ color: var(--ink-3) }
+
+/* ===== Popovers ===== */
+.backdrop{
+  position:fixed; inset:0; background: rgba(44,36,30,.25);
+}
+.popover{
+  position:fixed; right:16px; top:86px; z-index:10;
+  min-width: 280px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 12px;
+}
+.pop-title{ font-weight:600; margin-bottom: 8px; }
+.pop-hunts{ right: 120px; }
+.pop-research{ right: 220px; }
