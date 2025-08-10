@@ -50,9 +50,19 @@ export const rate = writable({
 function recalcRates() {
   const s = get(state);
 
-  // base rates
+  // 0) Figure out which resources are allowed to generate (unlocked eras only)
+  const allowed = new Set();
+  for (const era of s.eras) {
+    if (!era.unlocked) continue;
+    for (const r of era.resources?.primary ?? []) allowed.add(r);
+    for (const r of era.resources?.secondary ?? []) allowed.add(r);
+  }
+
+  // 1) Start with 0 for all resources, then set base only for allowed ones
   const perSec = {};
-  for (const key of Object.keys(RESOURCE_META)) {
+  for (const key of Object.keys(RESOURCE_META)) perSec[key] = 0;
+
+  for (const key of allowed) {
     const meta = RESOURCE_META[key];
     const base =
       BASE_RATES[key] ??
@@ -60,16 +70,21 @@ function recalcRates() {
     perSec[key] = base;
   }
 
-  const primaries = Object.keys(RESOURCE_META).filter((k) => RESOURCE_META[k].group === 'primary');
-  const secondaries = Object.keys(RESOURCE_META).filter((k) => RESOURCE_META[k].group === 'secondary');
-  const energyBased = Object.keys(RESOURCE_META).filter((k) => ENERGY_TAGS.has(k));
+  // Helper lists limited to allowed resources
+  const primaries = [...allowed].filter((k) => RESOURCE_META[k].group === 'primary');
+  const secondaries = [...allowed].filter((k) => RESOURCE_META[k].group === 'secondary');
+  const energyBased = [...allowed].filter((k) => ENERGY_TAGS.has(k));
 
-  const applyMultToSet = (set, amount) => set.forEach((r) => (perSec[r] = perSec[r] * (1 + amount)));
+  // Helper to apply a multiplier to a set safely
+  const applyMultToSet = (set, amount) => {
+    for (const r of set) perSec[r] = perSec[r] * (1 + amount);
+  };
 
   let globalAllMult = 1.0;
   let baseAllMult = 1.0;
   const unlockedCount = s.eras.filter((e) => e.unlocked).length;
 
+  // 2) Walk purchased upgrades from any era (ok), but only affect allowed resources
   for (const era of s.eras) {
     for (const upg of era.upgrades) {
       if (!upg.purchased || !upg.effects) continue;
@@ -77,57 +92,75 @@ function recalcRates() {
       for (const eff of upg.effects) {
         if (eff.type === 'mult') {
           switch (eff.target) {
-            case 'all/sec': globalAllMult *= 1 + eff.amount; break;
-            case 'base/all/sec': baseAllMult *= 1 + eff.amount; break;
-            case 'primary/all/sec': applyMultToSet(primaries, eff.amount); break;
-            case 'secondary/all/sec': applyMultToSet(secondaries, eff.amount); break;
-            case 'energy-based/all/sec': applyMultToSet(energyBased, eff.amount); break;
+            case 'all/sec':
+              // apply only to allowed resources
+              globalAllMult *= 1 + eff.amount;
+              break;
+            case 'base/all/sec':
+              baseAllMult *= 1 + eff.amount;
+              break;
+            case 'primary/all/sec':
+              applyMultToSet(primaries, eff.amount);
+              break;
+            case 'secondary/all/sec':
+              applyMultToSet(secondaries, eff.amount);
+              break;
+            case 'energy-based/all/sec':
+              applyMultToSet(energyBased, eff.amount);
+              break;
             case 'earlier-eras/all/sec': {
               const earlier = s.eras.filter((e) => e.unlocked && e.order < era.order).length;
               const mult = Math.pow(1 + eff.amount, earlier);
-              Object.keys(perSec).forEach((k) => (perSec[k] = perSec[k] * mult));
+              for (const k of allowed) perSec[k] = perSec[k] * mult;
               break;
             }
-            case 'secondary→primary/synergy': applyMultToSet(primaries, eff.amount); break;
+            case 'secondary→primary/synergy':
+              applyMultToSet(primaries, eff.amount);
+              break;
             case 'resource/sec':
-              if (eff.resource && perSec[eff.resource] != null) {
+              if (eff.resource && allowed.has(eff.resource)) {
                 perSec[eff.resource] = perSec[eff.resource] * (1 + eff.amount);
               }
               break;
             default:
-              // ignore unknown targets
               break;
           }
         } else if (eff.type === 'per-era') {
           const mult = 1 + (eff.amount ?? 0) * unlockedCount;
           if (eff.target === 'all/sec') {
-            Object.keys(perSec).forEach((k) => (perSec[k] = perSec[k] * mult));
+            for (const k of allowed) perSec[k] = perSec[k] * mult;
           } else if (eff.target === 'primary/all/sec') {
             applyMultToSet(primaries, mult - 1);
           } else if (eff.target === 'secondary/all/sec') {
             applyMultToSet(secondaries, mult - 1);
-          } else if (eff.target === 'resource/sec' && eff.resource && perSec[eff.resource] != null) {
+          } else if (eff.target === 'resource/sec' && eff.resource && allowed.has(eff.resource)) {
             perSec[eff.resource] = perSec[eff.resource] * mult;
           }
         }
-        // 'offline', 'trickle', 'meta' handled in future systems
+        // 'offline', 'trickle', 'meta' still handled later; when we add 'trickle',
+        // we’ll explicitly add tiny perSec to targeted locked resources.
       }
     }
   }
 
-  if (baseAllMult !== 1.0) Object.keys(perSec).forEach((k) => (perSec[k] = perSec[k] * baseAllMult));
-  if (globalAllMult !== 1.0) Object.keys(perSec).forEach((k) => (perSec[k] = perSec[k] * globalAllMult));
+  // 3) Apply base/global multipliers to allowed resources only
+  if (baseAllMult !== 1.0) for (const k of allowed) perSec[k] = perSec[k] * baseAllMult;
+  if (globalAllMult !== 1.0) for (const k of allowed) perSec[k] = perSec[k] * globalAllMult;
 
+  // 4) Commit
   rate.set({
     perSec,
-    totalPerSec: Object.values(perSec).reduce((a, b) => a + b, 0)
+    totalPerSec: [...allowed].reduce((a, k) => a + (perSec[k] ?? 0), 0)
   });
 
   state.update((curr) => {
-    for (const k of Object.keys(curr.resources)) curr.resources[k].perSec = perSec[k] ?? 0;
+    for (const k of Object.keys(curr.resources)) {
+      curr.resources[k].perSec = perSec[k] ?? 0;
+    }
     return curr;
   });
 }
+
 
 /** -------- Public API -------- */
 let _ticker = null;
