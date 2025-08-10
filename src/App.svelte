@@ -16,6 +16,8 @@
     return num.toFixed(2);
   };
   const label = (k) => RESOURCE_META[k]?.label ?? (k||'').replace(/-/g,' ');
+  const nextUpgrade = (era) => (era.upgrades ?? []).find(u => !u.purchased);
+
 
   // main CTA per era (matches mock’s big orange button)
   function getEraCTA(e) {
@@ -104,18 +106,27 @@
         </header>
 
         <div class="era-cta">
-          {#key e.unlocked + (e.upgrades?.filter(u=>!u.purchased).length || 0)}
-            {#let cta = getEraCTA(e)}
-              <button
-                class="btn primary big"
-                disabled={cta.disabled}
-                on:click={cta.action}
-              >
-                {cta.label}
-              </button>
-            {/let}
-          {/key}
+          {#if !e.unlocked}
+            <button
+              class="btn primary big"
+              disabled={!canAfford(e.unlockCost)}
+              on:click={() => advanceEra(e.id)}
+            >
+              Unlock ({costText(e.unlockCost)})
+            </button>
+          {:else if nextUpgrade(e)}
+            <button
+              class="btn primary big"
+              disabled={!canAfford(nextUpgrade(e).cost)}
+              on:click={() => buyUpgrade(e.id, nextUpgrade(e).id)}
+            >
+              {nextUpgrade(e).name} ({costText(nextUpgrade(e).cost)})
+            </button>
+          {:else}
+            <button class="btn ghost big" disabled>All upgrades owned</button>
+          {/if}
         </div>
+
 
         {#if e.unlocked && e.upgrades?.length}
           <div class="era-upgrades">
