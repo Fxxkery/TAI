@@ -6,7 +6,7 @@
 
   onMount(() => startTicker());
 
-  // --- helpers ---
+  // helpers
   const fmt = (n) => {
     if (n == null) return '0';
     const num = Number(n) || 0;
@@ -15,13 +15,34 @@
     if (num >= 1_000)         return (num/1_000).toFixed(2) + 'K';
     return num.toFixed(2);
   };
-  const label = (k) => RESOURCE_META[k]?.label ?? (k || '').replace(/-/g, ' ');
-  const icon  = (k) => RESOURCE_META[k]?.icon ?? '•';
+  const label = (k) => RESOURCE_META[k]?.label ?? (k||'').replace(/-/g,' ');
+
+  // main CTA per era (matches mock’s big orange button)
+  function getEraCTA(e) {
+    if (!e.unlocked) {
+      return {
+        kind: 'unlock',
+        label: `Unlock (${costText(e.unlockCost)})`,
+        disabled: !canAfford(e.unlockCost),
+        action: () => advanceEra(e.id)
+      };
+    }
+    const next = (e.upgrades || []).find(u => !u.purchased);
+    if (next) {
+      return {
+        kind: 'buy',
+        label: `${next.name} (${costText(next.cost)})`,
+        disabled: !canAfford(next.cost),
+        action: () => buyUpgrade(e.id, next.id)
+      };
+    }
+    return { kind:'done', label:'All upgrades owned', disabled: true, action: () => {} };
+  }
 
   const costText = (cost) => {
     if (!cost || cost.length === 0) return 'Free';
     const arr = Array.isArray(cost) ? cost : [cost];
-    return arr.map(c => `${fmt(c.amount)} ${label(c.resource)}`).join(' + ');
+    return arr.map(c => `${fmt(c.amount)} ${label(c.resource)}`).join(' • ');
   };
   const canAfford = (cost) => {
     if (!cost || cost.length === 0) return true;
@@ -29,81 +50,92 @@
     return arr.every(c => (($state.resources[c.resource]?.amount) ?? 0) >= c.amount);
   };
 
-  // which resources belong to unlocked eras (for greying out)
-  const unlockedResourceSet = () => {
-    const a = new Set();
-    for (const era of $state.eras) if (era.unlocked) {
-      for (const r of era.resources?.primary ?? []) a.add(r);
-      for (const r of era.resources?.secondary ?? []) a.add(r);
-    }
-    return a;
-  };
+  let showResources = true; // toggle by the “Era Resources ›” pill
 </script>
 
-<header class="header">
-  <div class="title">Temporal Agency Idle — Phase 6</div>
-  <div class="muted">total +/s: {$rate.totalPerSec.toFixed(2)}</div>
-</header>
+<!-- Banner / Title like the mock -->
+<section class="banner">
+  <div class="banner-inner">
+    <h1 class="brand">TEMPORAL REPAIR AGENCY</h1>
 
+    <div class="top-pills">
+      <div class="stat-pill tva">+{$rate.totalPerSec.toFixed(2)}/s</div>
+      <div class="stat-pill">Insights: 0</div>
+      <div class="stat-pill">Unlocked: {$state.eras.filter(e=>e.unlocked).length}</div>
+    </div>
+
+    <div class="top-actions">
+      <button class="btn olive-pill">Hunts</button>
+      <button class="btn olive-pill">Research</button>
+    </div>
+
+    <button class="btn olive-link" on:click={() => showResources = !showResources}>
+      Era Resources {showResources ? '›' : '‹'}
+    </button>
+  </div>
+</section>
+
+<!-- Content row: resources on top (toggle), then card grid -->
 <div class="wrap">
-  <div class="grid">
-    <!-- LEFT: Resources -->
-    <div class="card">
-      <div class="hdr">Resources</div>
-      <div class="inner">
-        {#each Object.keys($state.resources) as k}
-          <div class="list-row {unlockedResourceSet().has(k) ? '' : 'locked'}">
-            <div class="name"><span class="res-icon muted">{icon(k)}</span> {label(k)}</div>
-            <div class="muted">+{fmt($state.resources[k].perSec)}/s</div>
-            <div>{fmt($state.resources[k].amount)}</div>
-          </div>
-        {/each}
-      </div>
-    </div>
 
-    <!-- RIGHT: Eras & Upgrades -->
-    <div class="card">
-      <div class="hdr">Eras & Upgrades</div>
-      <div class="inner">
-        {#each $state.eras as era (era.id)}
-          <article class="era-card" style="margin-bottom:12px;">
-            <header class="era-head">
-              <div class="era-title">{era.name} <span class="muted">({era.id})</span></div>
-              {#if era.unlocked}
-                <span class="pill ok">Unlocked</span>
-              {:else}
-                <div class="row">
-                  <span class="muted">Cost: {costText(era.unlockCost)}</span>
-                  <button class="btn primary" disabled={!canAfford(era.unlockCost)} on:click={() => advanceEra(era.id)}>
-                    Advance Era
-                  </button>
+  {#if showResources}
+    <div class="resources-strip card">
+      {#each Object.keys($state.resources) as k}
+        <div class="res-chip {($state.resources[k].perSec ?? 0) <= 0 ? 'dim' : ''}">
+          <span class="dot"></span>
+          <span class="res-name">{label(k)}</span>
+          <span class="res-rate">+{fmt($state.resources[k].perSec)}/s</span>
+          <span class="res-amt">{fmt($state.resources[k].amount)}</span>
+        </div>
+      {/each}
+    </div>
+  {/if}
+
+  <div class="era-grid">
+    {#each $state.eras as e (e.id)}
+      <article class="era-card">
+        <header class="era-card-head">
+          <div class="era-title">{e.name}</div>
+          {#if e.unlocked}
+            <span class="pill ok">Unlocked</span>
+          {:else}
+            <span class="pill">Locked</span>
+          {/if}
+        </header>
+
+        <div class="era-cta">
+          {#key e.unlocked + (e.upgrades?.filter(u=>!u.purchased).length || 0)}
+            {#let cta = getEraCTA(e)}
+              <button
+                class="btn primary big"
+                disabled={cta.disabled}
+                on:click={cta.action}
+              >
+                {cta.label}
+              </button>
+            {/let}
+          {/key}
+        </div>
+
+        {#if e.unlocked && e.upgrades?.length}
+          <div class="era-upgrades">
+            <div class="upg-head">Upgrades</div>
+            {#each e.upgrades as u (u.id)}
+              <div class="upg-row">
+                <div class="upg-text">
+                  <div class="upg-title">{u.name}</div>
+                  <div class="muted">{costText(u.cost)}</div>
                 </div>
-              {/if}
-            </header>
-
-            {#if era.unlocked && era.upgrades?.length}
-              <div class="inner">
-                <div class="muted" style="margin-bottom:6px;">Upgrades</div>
-                {#each era.upgrades as upg (upg.id)}
-                  <div class="upg-row">
-                    <div>
-                      <div>{upg.name}</div>
-                      <div class="muted">{costText(upg.cost)}</div>
-                    </div>
-                    {#if upg.purchased}
-                      <span class="pill ok">Purchased</span>
-                    {:else}
-                      <button class="btn" disabled={!canAfford(upg.cost)} on:click={() => buyUpgrade(era.id, upg.id)}>
-                        Buy
-                      </button>
-                    {/if}
-                  </div>
-                {/each}
+                {#if u.purchased}
+                  <span class="pill ok">Owned</span>
+                {:else}
+                  <button class="btn ghost" disabled={!canAfford(u.cost)} on:click={() => buyUpgrade(e.id, u.id)}>Buy</button>
+                {/if}
               </div>
-            {/if}
-          </article>
-        {/each}
-      </div>
-    </div>
+            {/each}
+          </div>
+        {/if}
+      </article>
+    {/each}
   </div>
 </div>
