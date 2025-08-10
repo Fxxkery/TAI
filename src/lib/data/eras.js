@@ -1,38 +1,39 @@
 // src/lib/data/eras.js
-// Master progression table (Phase 6). JS-only, ready for Svelte stores.
-// Effects are declarative so your engine can apply them consistently.
+// Master progression data for all eras (Phase 6).
+// Costs use each era's "main" currency with occasional "gate" resource.
+// Keep numbers modest so you can test; we can tune later.
 
 export const ERAS = [
   {
     id: "prehistoric",
     name: "Prehistoric Age",
     order: 0,
-    unlockAt: null, // starting era
+    unlockAt: null,               // starting era
+    unlockCost: [],               // no cost; starts unlocked
     resources: {
-      primary: ["food", "tools"],
-      secondary: [], // keep onboarding simple
+      primary: ["food", "tools"], // main = food, gate = tools
+      secondary: []
     },
     upgrades: [
       {
         id: "improved-hunting-tools",
         name: "Improved Hunting Tools",
-        effects: [
-          { type: "mult", target: "resource/sec", resource: "food", amount: 0.5 },
-        ],
+        cost: [{ resource: "food", amount: 50 }],
+        effects: [{ type: "mult", target: "resource/sec", resource: "food", amount: 0.5 }]
       },
       {
         id: "fire-mastery",
         name: "Fire Mastery",
-        effects: [{ type: "mult", target: "all/sec", amount: 0.15 }],
+        cost: [{ resource: "tools", amount: 20 }],
+        effects: [{ type: "mult", target: "all/sec", amount: 0.15 }]
       },
       {
         id: "tribal-cooperation",
         name: "Tribal Cooperation",
-        effects: [
-          { type: "per-era", target: "all/sec", amount: 0.10, retroactive: true },
-        ],
-      },
-    ],
+        cost: [{ resource: "food", amount: 120 }],
+        effects: [{ type: "per-era", target: "all/sec", amount: 0.10, retroactive: true }]
+      }
+    ]
   },
 
   {
@@ -40,36 +41,44 @@ export const ERAS = [
     name: "Ancient Age",
     order: 1,
     unlockAt: { era: "prehistoric", condition: "core-complete" },
+    // use previous-era resources to unlock
+    unlockCost: [
+      { resource: "food", amount: 500 },
+      { resource: "tools", amount: 150 }
+    ],
     resources: {
-      primary: ["grain"],
-      secondary: ["stone"],
+      primary: ["grain"],     // main = grain
+      secondary: ["stone"]    // gate = stone
     },
     upgrades: [
       {
         id: "irrigation-systems",
         name: "Irrigation Systems",
-        effects: [
-          { type: "mult", target: "resource/sec", resource: "grain", amount: 0.5 },
-        ],
+        cost: [{ resource: "grain", amount: 400 }],
+        effects: [{ type: "mult", target: "resource/sec", resource: "grain", amount: 0.5 }]
       },
       {
         id: "bronze-craftsmanship",
         name: "Bronze Craftsmanship",
-        effects: [
-          { type: "mult", target: "resource/sec", resource: "stone", amount: 0.75 },
-        ],
+        cost: [{ resource: "stone", amount: 250 }],
+        effects: [{ type: "mult", target: "resource/sec", resource: "stone", amount: 0.75 }]
       },
       {
         id: "trade-routes",
         name: "Trade Routes",
-        effects: [{ type: "mult", target: "secondary/all/sec", amount: 0.10 }],
+        cost: [
+          { resource: "grain", amount: 600 },
+          { resource: "stone", amount: 200 }
+        ],
+        effects: [{ type: "mult", target: "secondary/all/sec", amount: 0.10 }]
       },
       {
         id: "mathematics",
         name: "Mathematics",
-        effects: [{ type: "mult", target: "research/speed", amount: 0.10 }],
-      },
-    ],
+        cost: [{ resource: "grain", amount: 800 }],
+        effects: [{ type: "mult", target: "research/speed", amount: 0.10 }]
+      }
+    ]
   },
 
   {
@@ -77,34 +86,43 @@ export const ERAS = [
     name: "Medieval Age",
     order: 2,
     unlockAt: { era: "ancient", condition: "core-complete" },
+    unlockCost: [
+      { resource: "grain", amount: 1500 },
+      { resource: "stone", amount: 600 }
+    ],
     resources: {
-      primary: ["grain", "gold"],
-      secondary: ["iron"],
+      primary: ["gold"],     // main = gold
+      secondary: ["iron"]    // gate = iron
     },
     upgrades: [
       {
         id: "steel-forging",
         name: "Steel Forging",
-        effects: [
-          { type: "mult", target: "resource/sec", resource: "iron", amount: 1.0 },
-        ],
+        cost: [{ resource: "iron", amount: 700 }],
+        effects: [{ type: "mult", target: "resource/sec", resource: "iron", amount: 1.0 }]
       },
       {
         id: "guild-systems",
         name: "Guild Systems",
-        effects: [{ type: "mult", target: "secondary→primary/synergy", amount: 0.20 }],
+        cost: [{ resource: "gold", amount: 1800 }],
+        effects: [{ type: "mult", target: "secondary→primary/synergy", amount: 0.20 }]
       },
       {
         id: "siege-engineering",
         name: "Siege Engineering",
-        effects: [{ type: "mult", target: "primary/all/sec", amount: 0.15 }],
+        cost: [{ resource: "gold", amount: 2200 }],
+        effects: [{ type: "mult", target: "primary/all/sec", amount: 0.15 }]
       },
       {
         id: "maritime-trade",
         name: "Maritime Trade",
-        effects: [{ type: "mult", target: "secondary/all/sec", amount: 0.10 }],
-      },
-    ],
+        cost: [
+          { resource: "gold", amount: 2000 },
+          { resource: "iron", amount: 400 }
+        ],
+        effects: [{ type: "mult", target: "secondary/all/sec", amount: 0.10 }]
+      }
+    ]
   },
 
   {
@@ -112,34 +130,46 @@ export const ERAS = [
     name: "Renaissance",
     order: 3,
     unlockAt: { era: "medieval", condition: "core-complete" },
+    unlockCost: [
+      { resource: "gold", amount: 4500 },
+      { resource: "iron", amount: 1200 }
+    ],
     resources: {
-      primary: ["gold"],
-      secondary: ["paper"],
+      primary: ["gold"],   // main still gold
+      secondary: ["paper"] // gate = paper
     },
     upgrades: [
       {
         id: "printing-press",
         name: "Printing Press",
-        effects: [
-          { type: "mult", target: "resource/sec", resource: "paper", amount: 1.0 },
-        ],
+        cost: [{ resource: "paper", amount: 800 }],
+        effects: [{ type: "mult", target: "resource/sec", resource: "paper", amount: 1.0 }]
       },
       {
         id: "scientific-method",
         name: "Scientific Method",
-        effects: [{ type: "mult", target: "research/speed", amount: 0.20 }],
+        cost: [
+          { resource: "gold", amount: 5200 },
+          { resource: "paper", amount: 500 }
+        ],
+        effects: [{ type: "mult", target: "research/speed", amount: 0.20 }]
       },
       {
         id: "global-navigation",
         name: "Global Navigation",
-        effects: [{ type: "mult", target: "all/sec", amount: 0.15 }],
+        cost: [{ resource: "gold", amount: 6000 }],
+        effects: [{ type: "mult", target: "all/sec", amount: 0.15 }]
       },
       {
         id: "merchant-banking",
         name: "Merchant Banking",
-        effects: [{ type: "mult", target: "secondary/all/sec", amount: 0.10 }],
-      },
-    ],
+        cost: [
+          { resource: "gold", amount: 5800 },
+          { resource: "paper", amount: 400 }
+        ],
+        effects: [{ type: "mult", target: "secondary/all/sec", amount: 0.10 }]
+      }
+    ]
   },
 
   {
@@ -147,81 +177,103 @@ export const ERAS = [
     name: "Industrial Age",
     order: 4,
     unlockAt: { era: "renaissance", condition: "core-complete" },
+    unlockCost: [
+      { resource: "gold", amount: 12000 },
+      { resource: "paper", amount: 1500 }
+    ],
     resources: {
-      primary: ["manufactured-goods"],
-      secondary: ["coal"],
+      primary: ["manufactured-goods"], // main
+      secondary: ["coal"]              // gate
     },
     upgrades: [
       {
         id: "steam-power",
         name: "Steam Power",
-        effects: [
-          { type: "mult", target: "resource/sec", resource: "coal", amount: 1.0 },
-        ],
+        cost: [{ resource: "coal", amount: 2500 }],
+        effects: [{ type: "mult", target: "resource/sec", resource: "coal", amount: 1.0 }]
       },
       {
         id: "mass-production",
         name: "Mass Production",
-        effects: [{ type: "mult", target: "primary/all/sec", amount: 0.20 }],
+        cost: [{ resource: "manufactured-goods", amount: 9000 }],
+        effects: [{ type: "mult", target: "primary/all/sec", amount: 0.20 }]
       },
       {
         id: "railway-networks",
         name: "Railway Networks",
-        effects: [{ type: "mult", target: "secondary/all/sec", amount: 0.15 }],
+        cost: [
+          { resource: "manufactured-goods", amount: 10000 },
+          { resource: "coal", amount: 1600 }
+        ],
+        effects: [{ type: "mult", target: "secondary/all/sec", amount: 0.15 }]
       },
       {
         id: "telegraph-systems",
         name: "Telegraph Systems",
+        cost: [{ resource: "manufactured-goods", amount: 8000 }],
         effects: [
           { type: "mult", target: "research/speed", amount: 0.10 },
-          { type: "mult", target: "primary/all/sec", amount: 0.05 },
-        ],
-      },
-    ],
+          { type: "mult", target: "primary/all/sec", amount: 0.05 }
+        ]
+      }
+    ]
   },
 
-  // Phase 6 new eras
+  // ---- Phase 6 new eras ----
   {
     id: "modern",
     name: "Modern Age",
     order: 5,
     unlockAt: { era: "industrial", condition: "core-complete" },
+    unlockCost: [
+      { resource: "manufactured-goods", amount: 30000 },
+      { resource: "coal", amount: 6000 }
+    ],
     resources: {
-      primary: ["consumer-goods"],
-      secondary: ["oil", "electricity"],
+      primary: ["consumer-goods"],        // main
+      secondary: ["oil", "electricity"]   // gates
     },
     upgrades: [
       {
         id: "assembly-line-expansion",
         name: "Assembly Line Expansion",
-        effects: [{ type: "mult", target: "base/all/sec", amount: 0.5 }],
+        cost: [{ resource: "consumer-goods", amount: 25000 }],
+        effects: [{ type: "mult", target: "base/all/sec", amount: 0.5 }]
       },
       {
         id: "oil-refinement",
         name: "Oil Refinement",
-        effects: [
-          { type: "mult", target: "resource/sec", resource: "oil", amount: 0.75 },
-        ],
+        cost: [{ resource: "oil", amount: 8000 }],
+        effects: [{ type: "mult", target: "resource/sec", resource: "oil", amount: 0.75 }]
       },
       {
         id: "grid-expansion",
         name: "Grid Expansion",
+        cost: [
+          { resource: "consumer-goods", amount: 18000 },
+          { resource: "electricity", amount: 5000 }
+        ],
         effects: [
           { type: "mult", target: "resource/sec", resource: "electricity", amount: 0.25 },
-          { type: "mult", target: "resource/sec", resource: "oil", amount: 0.10 },
-        ],
+          { type: "mult", target: "resource/sec", resource: "oil", amount: 0.10 }
+        ]
       },
       {
         id: "automated-factories",
         name: "Automated Factories",
-        effects: [{ type: "offline", target: "secondary/all", amount: 0.10 }], // small offline trickle
+        cost: [{ resource: "consumer-goods", amount: 22000 }],
+        effects: [{ type: "offline", target: "secondary/all", amount: 0.10 }]
       },
       {
         id: "global-logistics",
         name: "Global Logistics",
-        effects: [{ type: "trickle", target: "next-era/secondary", amount: 0.02 }], // 2% of current secondary as trickle to next era
-      },
-    ],
+        cost: [
+          { resource: "consumer-goods", amount: 26000 },
+          { resource: "oil", amount: 4000 }
+        ],
+        effects: [{ type: "trickle", target: "next-era/secondary", amount: 0.02 }]
+      }
+    ]
   },
 
   {
@@ -229,39 +281,52 @@ export const ERAS = [
     name: "Digital Age",
     order: 6,
     unlockAt: { era: "modern", condition: "core-complete" },
+    unlockCost: [
+      { resource: "consumer-goods", amount: 90000 },
+      { resource: "electricity", amount: 15000 }
+    ],
     resources: {
-      primary: ["services"],
-      secondary: ["data", "renewables"],
+      primary: ["services"],               // main
+      secondary: ["data", "renewables"]    // gates
     },
     upgrades: [
       {
         id: "server-farms",
         name: "Server Farms",
-        effects: [{ type: "mult", target: "resource/sec", resource: "data", amount: 1.0 }],
+        cost: [{ resource: "data", amount: 20000 }],
+        effects: [{ type: "mult", target: "resource/sec", resource: "data", amount: 1.0 }]
       },
       {
         id: "green-data-centers",
         name: "Green Data Centers",
-        effects: [
-          { type: "mult", target: "resource/sec", resource: "renewables", amount: 0.20 },
+        cost: [
+          { resource: "services", amount: 70000 },
+          { resource: "renewables", amount: 12000 }
         ],
+        effects: [{ type: "mult", target: "resource/sec", resource: "renewables", amount: 0.20 }]
       },
       {
         id: "automation-protocols",
         name: "Automation Protocols",
-        effects: [{ type: "mult", target: "primary/all/sec", amount: 0.15 }],
+        cost: [{ resource: "services", amount: 60000 }],
+        effects: [{ type: "mult", target: "primary/all/sec", amount: 0.15 }]
       },
       {
         id: "quantum-networking",
         name: "Quantum Networking",
-        effects: [{ type: "mult", target: "secondary/all/sec", amount: 0.15 }],
+        cost: [
+          { resource: "services", amount: 65000 },
+          { resource: "data", amount: 15000 }
+        ],
+        effects: [{ type: "mult", target: "secondary/all/sec", amount: 0.15 }]
       },
       {
         id: "algorithmic-trade",
         name: "Algorithmic Trade",
-        effects: [{ type: "mult", target: "research/speed", amount: 0.10 }],
-      },
-    ],
+        cost: [{ resource: "services", amount: 80000 }],
+        effects: [{ type: "mult", target: "research/speed", amount: 0.10 }]
+      }
+    ]
   },
 
   {
@@ -269,46 +334,52 @@ export const ERAS = [
     name: "Near Future",
     order: 7,
     unlockAt: { era: "digital", condition: "core-complete" },
+    unlockCost: [
+      { resource: "services", amount: 220000 },
+      { resource: "data", amount: 50000 }
+    ],
     resources: {
-      primary: ["advanced-goods"],
-      secondary: ["energy-credits", "synthetic-materials"],
+      primary: ["advanced-goods"],                     // main
+      secondary: ["energy-credits", "synthetic-materials"] // gates
     },
     upgrades: [
       {
         id: "fusion-reactors",
         name: "Fusion Reactors",
-        effects: [
-          { type: "mult", target: "resource/sec", resource: "energy-credits", amount: 2.0 },
-        ],
+        cost: [{ resource: "energy-credits", amount: 90000 }],
+        effects: [{ type: "mult", target: "resource/sec", resource: "energy-credits", amount: 2.0 }]
       },
       {
         id: "nanofabrication-plants",
         name: "Nanofabrication Plants",
-        effects: [
-          {
-            type: "mult",
-            target: "resource/sec",
-            resource: "synthetic-materials",
-            amount: 1.5,
-          },
-        ],
+        cost: [{ resource: "synthetic-materials", amount: 70000 }],
+        effects: [{ type: "mult", target: "resource/sec", resource: "synthetic-materials", amount: 1.5 }]
       },
       {
         id: "global-smart-grid",
         name: "Global Smart Grid",
-        effects: [{ type: "mult", target: "energy-based/all/sec", amount: 0.20 }],
+        cost: [
+          { resource: "advanced-goods", amount: 160000 },
+          { resource: "energy-credits", amount: 40000 }
+        ],
+        effects: [{ type: "mult", target: "energy-based/all/sec", amount: 0.20 }]
       },
       {
         id: "self-replicating-factories",
         name: "Self-Replicating Factories",
-        effects: [{ type: "mult", target: "all-upgrade-effects", amount: 0.10 }],
+        cost: [{ resource: "advanced-goods", amount: 200000 }],
+        effects: [{ type: "mult", target: "all-upgrade-effects", amount: 0.10 }]
       },
       {
         id: "planetary-defense-systems",
         name: "Planetary Defense Systems",
-        effects: [{ type: "meta", target: "prestige-prep", amount: 1 }], // enables prestige hook later
-      },
-    ],
+        cost: [
+          { resource: "advanced-goods", amount: 220000 },
+          { resource: "synthetic-materials", amount: 50000 }
+        ],
+        effects: [{ type: "meta", target: "prestige-prep", amount: 1 }]
+      }
+    ]
   },
 
   {
@@ -316,45 +387,57 @@ export const ERAS = [
     name: "Interstellar Age",
     order: 8,
     unlockAt: { era: "near-future", condition: "core-complete" },
+    unlockCost: [
+      { resource: "advanced-goods", amount: 500000 },
+      { resource: "energy-credits", amount: 120000 }
+    ],
     resources: {
-      primary: ["stellar-industry"],
-      secondary: ["stellar-energy", "exotic-matter"],
+      primary: ["stellar-industry"],          // main
+      secondary: ["stellar-energy", "exotic-matter"] // gates
     },
     upgrades: [
       {
         id: "dyson-spheres",
         name: "Dyson Spheres",
-        effects: [
-          { type: "mult", target: "resource/sec", resource: "stellar-energy", amount: 2.5 },
-        ],
+        cost: [{ resource: "stellar-energy", amount: 220000 }],
+        effects: [{ type: "mult", target: "resource/sec", resource: "stellar-energy", amount: 2.5 }]
       },
       {
         id: "exotic-matter-harvesters",
         name: "Exotic Matter Harvesters",
-        effects: [
-          { type: "mult", target: "resource/sec", resource: "exotic-matter", amount: 2.0 },
-        ],
+        cost: [{ resource: "exotic-matter", amount: 180000 }],
+        effects: [{ type: "mult", target: "resource/sec", resource: "exotic-matter", amount: 2.0 }]
       },
       {
         id: "wormhole-gates",
         name: "Wormhole Gates",
-        effects: [{ type: "mult", target: "secondary/all/sec", amount: 0.20 }],
+        cost: [
+          { resource: "stellar-industry", amount: 260000 },
+          { resource: "exotic-matter", amount: 60000 }
+        ],
+        effects: [{ type: "mult", target: "secondary/all/sec", amount: 0.20 }]
       },
       {
         id: "galactic-trade-networks",
         name: "Galactic Trade Networks",
-        effects: [{ type: "mult", target: "earlier-eras/all/sec", amount: 0.15 }],
+        cost: [{ resource: "stellar-industry", amount: 300000 }],
+        effects: [{ type: "mult", target: "earlier-eras/all/sec", amount: 0.15 }]
       },
       {
         id: "temporal-core",
         name: "Temporal Core",
-        effects: [{ type: "meta", target: "prestige-currency", currency: "temporal-shards" }],
-      },
-    ],
-  },
+        cost: [
+          { resource: "stellar-industry", amount: 350000 },
+          { resource: "stellar-energy", amount: 80000 }
+        ],
+        effects: [{ type: "meta", target: "prestige-currency", currency: "temporal-shards" }]
+      }
+    ]
+  }
 ];
 
-// Optional: central list of resource metadata (icons, display order, grouping).
+// Optional: resource metadata for icons/labels and grouping.
+// Group "primary" gets a higher default base rate; others use secondary.
 export const RESOURCE_META = {
   // Early game
   food: { label: "Food", group: "primary", icon: "🍖" },
@@ -387,5 +470,5 @@ export const RESOURCE_META = {
   // Interstellar
   "stellar-industry": { label: "Stellar Industry", group: "primary", icon: "🛰️" },
   "stellar-energy": { label: "Stellar Energy", group: "secondary", icon: "☀️" },
-  "exotic-matter": { label: "Exotic Matter", group: "secondary", icon: "🌀" },
+  "exotic-matter": { label: "Exotic Matter", group: "secondary", icon: "🌀" }
 };
