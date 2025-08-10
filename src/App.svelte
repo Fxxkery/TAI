@@ -192,7 +192,12 @@
         {#each $state.hunts.missions as m}
           <li class="row between">
             <div>
-              #{m.id} • {m.rarity} • ends at {new Date(m.endTime).toLocaleTimeString()}
+              {#key $state.lastTick}
+                {#let secs = Math.max(0, Math.ceil((m.endTime - $state.lastTick) / 1000))}
+                  #{m.id} • {m.rarity} • {Math.floor(secs/60).toString().padStart(2,'0')}:{(secs%60).toString().padStart(2,'0')}
+                {/let}
+              {/key}
+
               {#if m.rewardReady}<span class="badge success">Ready</span>{/if}
             </div>
             <button class="btn" disabled={!m.rewardReady} on:click={() => handleClaimHunt(m.id)}>
