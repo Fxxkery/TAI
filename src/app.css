@@ -1,0 +1,243 @@
+/* =========================================================
+   Temporal Repair Agency — TVA Retro Theme (app.css)
+   Uses classes already present in your App.svelte.
+   Palette + tokens from your spec.
+========================================================= */
+
+/* ---------- Design Tokens ---------- */
+:root{
+  /* Core palette */
+  --paper:        #EDE3D0;  /* base */
+  --paper-raised: #F6F0E5;  /* raised */
+  --paper-band:   #DCC9A9;  /* subtle banding */
+
+  --ink:   #2C241E;         /* primary text */
+  --ink-2: #584B40;         /* secondary */
+  --ink-3: #8A7B6D;         /* muted */
+
+  --line:      #5D4F44;     /* strokes */
+  --hairline:  #C9B9A4;     /* hairlines */
+
+  --tva:       #D97B23;     /* action primary */
+  --tva-h:     #BF6B1F;
+  --tva-a:     #A75C1B;
+
+  --olive:     #6C7756;     /* utility */
+  --olive-h:   #5B6548;
+  --olive-a:   #4C553C;
+
+  --teal:      #4C7A74;     /* accent */
+  --teal-h:    #406864;
+  --teal-a:    #365854;
+
+  --success:   #3B7D4F;
+  --warning:   #C47C19;
+  --danger:    #B5483C;
+  --info:      #3F7DA5;
+
+  /* Elevation & shape */
+  --radius-card: 18px;
+  --radius-btn:  12px;
+  --radius-pill: 999px;
+  --radius-in:   10px;
+
+  --shadow-card: 0 1px 0 rgba(255,255,255,.35) inset, 0 6px 18px rgba(0,0,0,.08);
+  --focus: 0 0 0 3px rgba(76,122,116,.35); /* teal glow */
+
+  /* Typography */
+  --font-ui: 'Montserrat', Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --size-h3: 21px;
+  --size-body: 15px;
+  --size-small: 12.5px;
+
+  /* Layout scale */
+  --s-4: 4px; --s-8: 8px; --s-12: 12px; --s-16: 16px; --s-24: 24px; --s-32: 32px;
+}
+
+/* ---------- Base / Background ---------- */
+@font-face{
+  font-family: 'Montserrat';
+  font-style: normal; font-weight: 400; font-display: swap;
+  src: local('Montserrat'), local('Montserrat-Regular'); /* falls back to system if not available */
+}
+
+html, body { height: 100%; }
+* { box-sizing: border-box; }
+
+body{
+  margin: 0;
+  color: var(--ink);
+  background:
+    /* subtle curved bands */
+    radial-gradient(80% 60% at 85% 10%, rgba(93,79,68,.45) 0%, rgba(93,79,68,0) 55%) ,
+    radial-gradient(70% 50% at 70% 0%,  rgba(93,79,68,.30) 0%, rgba(93,79,68,0) 50%),
+    linear-gradient(180deg, var(--paper-raised), var(--paper));
+  font: 400 var(--size-body)/1.45 var(--font-ui);
+}
+
+/* Paper noise (CSS-only faux texture) */
+body:before{
+  content:"";
+  position:fixed; inset:0; pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.015) 0 2px, transparent 2px 4px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.012) 0 3px, transparent 3px 6px);
+  mix-blend-mode:multiply; opacity:.35;
+}
+
+/* Scrollbar (subtle) */
+::-webkit-scrollbar{ width:10px; height:10px }
+::-webkit-scrollbar-thumb{ background: rgba(93,79,68,.35); border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover{ background: rgba(93,79,68,.55); border-color: transparent; }
+::-webkit-scrollbar-track{ background: transparent; }
+
+/* ---------- Header ---------- */
+.header{
+  position: sticky; top: 0; z-index: 5;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--s-12) var(--s-16);
+  background: linear-gradient(180deg, rgba(246,240,229,.85), rgba(237,227,208,.85));
+  backdrop-filter: blur(4px);
+  border-bottom: 1px solid var(--hairline);
+  box-shadow: var(--shadow-card);
+}
+.title{
+  font-weight: 700; letter-spacing:.6px; font-size: 18px;
+}
+.muted{ color: var(--ink-3); font-size: var(--size-small); }
+
+/* ---------- Layout ---------- */
+.wrap{ padding: var(--s-16); }
+.grid{
+  display: grid; gap: var(--s-16);
+  grid-template-columns: 320px minmax(0,1fr);
+}
+
+/* ---------- Cards ---------- */
+.card{
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.hdr{
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--s-12) var(--s-16);
+  background: linear-gradient(180deg, rgba(220,201,169,.35), rgba(220,201,169,0));
+  border-bottom: 1px solid var(--hairline);
+  font-weight: 600;
+}
+.inner{ padding: var(--s-16); }
+
+/* ---------- Resource list ---------- */
+.list-row{
+  display: grid; grid-template-columns: 1fr auto auto; gap: var(--s-12);
+  align-items: center;
+  padding: var(--s-8) 0;
+  border-bottom: 1px dashed rgba(93,79,68,.30);
+}
+.list-row:last-child{ border-bottom: 0; }
+.name{
+  display: flex; align-items: center; gap: var(--s-8);
+  min-width: 0; text-transform: capitalize; font-weight: 500;
+}
+.res-icon{ width: 18px; display: inline-flex; justify-content: center; opacity: .85; }
+.locked{ opacity: .55; }
+.list-row:hover{ background: rgba(220,201,169,.18); border-radius: 10px; }
+
+/* ---------- Pills ---------- */
+.pill{
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--size-small); font-weight: 500;
+  padding: 4px 10px; border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  color: var(--ink-2);
+  box-shadow: var(--shadow-card);
+}
+.pill.ok{ color: #fff; background: rgba(59,125,79,.92); border-color: rgba(59,125,79,.9); }
+.pill.olive{ color: #fff; background: var(--olive); border-color: var(--olive); }
+.pill.teal{ color: #fff; background: var(--teal); border-color: var(--teal); }
+
+/* ---------- Buttons ---------- */
+.btn{
+  appearance: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-btn);
+  padding: 8px 12px;
+  font: 500 var(--size-body)/1 var(--font-ui);
+  color: var(--ink);
+  background: var(--paper);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, transform .05s ease, box-shadow .2s ease;
+}
+.btn:hover{ background: var(--paper-raised); }
+.btn:active{ transform: translateY(1px); }
+.btn:focus-visible{ outline: none; box-shadow: var(--focus), var(--shadow-card); }
+
+.btn.primary{
+  color: #fff; background: var(--tva); border-color: var(--tva);
+}
+.btn.primary:hover{ background: var(--tva-h); border-color: var(--tva-h); }
+.btn.primary:active{ background: var(--tva-a); border-color: var(--tva-a); }
+
+.btn.secondary{
+  color: #fff; background: var(--olive); border-color: var(--olive);
+}
+.btn.secondary:hover{ background: var(--olive-h); border-color: var(--olive-h); }
+.btn.secondary:active{ background: var(--olive-a); border-color: var(--olive-a); }
+
+.btn.ghost{
+  background: var(--paper); color: var(--ink-2);
+}
+.btn:disabled{ opacity: .55; cursor: not-allowed; }
+
+/* ---------- Era list ---------- */
+.era-card{
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--paper);
+  box-shadow: var(--shadow-card);
+  margin-bottom: var(--s-12);
+}
+.era-head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: var(--s-12) var(--s-16);
+  border-bottom: 1px solid var(--hairline);
+  background: linear-gradient(180deg, rgba(220,201,169,.22), rgba(220,201,169,0));
+}
+.era-title{ font-weight: 600; letter-spacing: .2px; }
+.era-head .row{ display:flex; align-items:center; gap: var(--s-12); }
+
+.inner .muted.section{ display:block; margin: 4px 0 8px; color: var(--ink-3); }
+
+.upg-row{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: var(--s-8) 0;
+  border-bottom: 1px dashed rgba(93,79,68,.30);
+}
+.upg-row:last-child{ border-bottom: 0; }
+.upg-row:hover{ background: rgba(220,201,169,.18); border-radius: 10px; }
+
+.upg-row .muted{ color: var(--ink-3); font-size: var(--size-small); }
+
+/* ---------- Header pills (top-right stats) ---------- */
+.header .muted strong{ color: var(--ink-2); }
+
+/* ---------- Form / Inputs (future) ---------- */
+input, select{
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-in);
+  padding: 8px 10px; color: var(--ink);
+  font: 400 var(--size-body)/1 var(--font-ui);
+  box-shadow: var(--shadow-card);
+}
+input:focus, select:focus{ outline: none; box-shadow: var(--focus), var(--shadow-card); border-color: var(--teal); }
+
+/* ---------- Data viz hints (sparks) ---------- */
+.spark-a{ color: #D97B23 } .spark-b{ color:#4C7A74 } .spark-c{ color:#6C7756 }
+.spark-d{ color:#B5483C } .spark-e{ color:#3B7D4F }
+.gridlines{ stroke: rgba(93,79,68,.25) }
