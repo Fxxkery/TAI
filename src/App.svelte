@@ -1,12 +1,12 @@
 <script>
   import './app.css';
   import { onMount } from 'svelte';
-  import { state, rate, startTicker, buyUpgrade, advanceEra } from './lib/stores';
+  import { state, rate, startTicker, buyUpgrade, advanceEra, hardReset } from './lib/stores';
   import { RESOURCE_META } from './lib/data/eras';
 
   onMount(() => startTicker());
 
-  // ---- helpers ----
+  // --- helpers ---
   const fmt = (n) => {
     if (n == null) return '0';
     const num = Number(n) || 0;
@@ -28,11 +28,22 @@
   };
   const nextUpgrade = (era) => (era.upgrades ?? []).find(u => !u.purchased);
 
-  let showResources = true; // toggled by "Era Resources" pill
+  // UI state
+  let showResources = true;
+  let showMenu = false;
+  let showHunts = false;
+  let showResearch = false;
+
+  const toggleResources = () => (showResources = !showResources);
+  const toggleMenu = () => (showMenu = !showMenu);
+  const toggleHunts = () => { showHunts = !showHunts; showResearch = false; showMenu = false; };
+  const toggleResearch = () => { showResearch = !showResearch; showHunts = false; showMenu = false; };
+
+  const closeAllPopovers = () => { showMenu=false; showHunts=false; showResearch=false; };
 </script>
 
-<!-- Banner / Title -->
-<section class="banner">
+<!-- Banner -->
+<section class="banner" on:keydown={(e)=> e.key==='Escape' && closeAllPopovers()}>
   <div class="banner-inner">
     <h1 class="brand">TEMPORAL REPAIR AGENCY</h1>
 
@@ -42,23 +53,25 @@
       <div class="stat-pill">Unlocked: {$state.eras.filter(e=>e.unlocked).length}</div>
     </div>
 
+    <!-- Era Resources moved LEFT of Hunts/Research -->
     <div class="top-actions">
-      <button class="btn olive-pill">Hunts</button>
-      <button class="btn olive-pill">Research</button>
-    </div>
-
-    <div class="banner-right">
-      <button class="btn olive-link" on:click={() => showResources = !showResources}>
+      <button class="btn olive-pill" on:click={toggleResources}>
         Era Resources {showResources ? '›' : '‹'}
       </button>
-      <button class="btn menu-pill">Menu</button>
+      <button class="btn olive-pill" on:click={toggleHunts}>Hunts</button>
+      <button class="btn olive-pill" on:click={toggleResearch}>Research</button>
+    </div>
+
+    <!-- Right side: Menu pill -->
+    <div class="banner-right">
+      <button class="btn menu-pill" on:click={toggleMenu}>Menu</button>
     </div>
   </div>
 </section>
 
 <div class="wrap">
   {#if showResources}
-    <!-- Resource chips strip -->
+    <!-- Resource chips strip (aligned) -->
     <div class="resources-strip card">
       {#each Object.keys($state.resources) as k}
         <div class="res-chip {($state.resources[k].perSec ?? 0) <= 0 ? 'dim' : ''}">
@@ -130,3 +143,32 @@
     </div>
   </div>
 </div>
+
+<!-- Popovers -->
+{#if showMenu}
+  <div class="backdrop" on:click={closeAllPopovers}></div>
+  <div class="popover pop-menu">
+    <div class="pop-title">Menu</div>
+    <button class="btn ghost" on:click={() => showResources = !showResources}>
+      Toggle Era Resources
+    </button>
+    <button class="btn ghost" on:click={hardReset}>Hard Reset</button>
+    <div class="muted" style="margin-top:8px;">(Save/Load coming soon)</div>
+  </div>
+{/if}
+
+{#if showHunts}
+  <div class="backdrop" on:click={closeAllPopovers}></div>
+  <div class="popover pop-hunts">
+    <div class="pop-title">Hunts</div>
+    <div class="muted">Hunts system is being ported. For now, this is a placeholder.</div>
+  </div>
+{/if}
+
+{#if showResearch}
+  <div class="backdrop" on:click={closeAllPopovers}></div>
+  <div class="popover pop-research">
+    <div class="pop-title">Research</div>
+    <div class="muted">Research tree will return with the new data model.</div>
+  </div>
+{/if}
