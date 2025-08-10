@@ -1,0 +1,16 @@
+:root{
+  --tva-orange:#D97B23; --tva-brown:#2C241E; --tva-tan:#E6D5B8;
+  --tva-olive:#6C7756; --tva-teal:#4C7A74; --tva-off:#F4F0E8; --line:#5d4f44;
+}
+html,body{height:100%} body{margin:0;background:var(--tva-tan);color:#2b251f;
+  font-family:'Montserrat',system-ui,-apple-system,'Segoe UI',Arial,sans-serif}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;
+  background-image:url('/textures/paper.png');background-size:512px 512px;opacity:.32;mix-blend-mode:multiply}
+.pill{border-radius:999px;padding:8px 12px;border:2px solid var(--line);background:#fff5}
+.pill-primary{background:var(--tva-orange);color:#fff;border-color:#a95f1b}
+.pill-secondary{background:var(--tva-teal);color:#fff;border-color:#345b57}
+.btn{cursor:pointer;border-radius:12px;padding:10px 14px;border:2px solid var(--line);background:#fff;transition:filter .15s, transform .05s}
+.btn:hover{filter:brightness(1.03)} .btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--tva-orange);color:#fff;border-color:#a95f1b}
+.btn.secondary{background:var(--tva-olive);color:#fff;border-color:#4e5a3e}
+.card{background:#f8f3ea;border:2px solid var(--line);border-radius:18px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
