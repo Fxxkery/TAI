@@ -189,24 +189,26 @@
       <div class="muted">No hunts in progress.</div>
     {:else}
       <ul class="list">
-        {#each $state.hunts.missions as m}
-          <li class="row between">
-            <div>
-              {#key $state.lastTick}
-                {#let secs = Math.max(0, Math.ceil((m.endTime - $state.lastTick) / 1000))}
-                  #{m.id} • {m.rarity} • {Math.floor(secs/60).toString().padStart(2,'0')}:{(secs%60).toString().padStart(2,'0')}
-                {/let}
-              {/key}
-
-              {#if m.rewardReady}<span class="badge success">Ready</span>{/if}
-            </div>
-            <button class="btn" disabled={!m.rewardReady} on:click={() => handleClaimHunt(m.id)}>
-              {m.rewardReady ? 'Claim' : 'Pending'}
-            </button>
-          </li>
-        {/each}
-      </ul>
-    {/if}
+        {#each $state.hunts.missions as m (m.id)}
+            {#key $state.lastTick}
+              <li class="row between">
+                <div>
+                  #{m.id} • {m.rarity} •
+                  {#if !m.rewardReady}
+                    {@const secs = Math.max(0, Math.ceil((m.endTime - $state.lastTick) / 1000))}
+                    {fmtMMSS(secs)} left
+                  {:else}
+                    <span class="badge success">Ready</span>
+                  {/if}
+                </div>
+                <button class="btn" disabled={!m.rewardReady} on:click={() => handleClaimHunt(m.id)}>
+                  {m.rewardReady ? 'Claim' : 'Pending'}
+                </button>
+              </li>
+            {/key}
+          {/each}
+        </ul>
+      {/if}
 
     <div class="hint">Artifact bonus: {($state.artifactBonus * 100).toFixed(2)}%</div>
   </div>
