@@ -1,19 +1,49 @@
 // src/lib/data/eras.js
-// Master progression data for all eras (Phase 6).
-// Costs use each era's "main" currency with occasional "gate" resource.
-// Keep numbers modest so you can test; we can tune later.
+// Phase 6 progression data — Chrono-driven unlocks.
+// Rule: each era (except the first unlock after Time Hub) requires Chrono + previous era's secondary[0].
+// Prehistoric is Chrono-only (no prior secondary).
 
 export const ERAS = [
+  // ---- Core 0: Time Hub ----
+  {
+    id: "time-hub",
+    name: "Time Hub",
+    order: 0,
+    unlockAt: null,                 // starts unlocked
+    unlockCost: [],                 // no cost
+    resources: {
+      primary: ["chrono"],          // generates Chrono only
+      secondary: []                 // none
+    },
+    upgrades: [
+      {
+        id: "calibrator",
+        name: "Chrono Calibrator",
+        cost: [{ resource: "chrono", amount: 20 }],
+        effects: [{ type: "mult", target: "resource/sec", resource: "chrono", amount: 0.5 }]
+      },
+      {
+        id: "stability-loop",
+        name: "Stability Loop",
+        cost: [{ resource: "chrono", amount: 60 }],
+        effects: [{ type: "mult", target: "base/all/sec", amount: 0.10 }]
+      }
+    ]
+  },
+
+  // ---- 1: Prehistoric ----
   {
     id: "prehistoric",
     name: "Prehistoric Age",
-    order: 0,
-    unlockAt: null,               // starting era
-    unlockCost: [],               // no cost; starts unlocked
+    order: 1,
+    unlockAt: { era: "time-hub", condition: "core-complete" },
+    unlockCost: [
+      { resource: "chrono", amount: 25 } // Chrono-only for first unlock
+    ],
     resources: {
-      chrono: { label: "Chrono", group: "primary", icon: "⏳" }, // Main game resource
-      primary: ["food", "tools"], // main = food, gate = tools
-      secondary: []
+      // Make Tools the gate (secondary) so Ancient will require Tools
+      primary: ["food"],
+      secondary: ["tools"]
     },
     upgrades: [
       {
@@ -37,19 +67,19 @@ export const ERAS = [
     ]
   },
 
+  // ---- 2: Ancient ----
   {
     id: "ancient",
     name: "Ancient Age",
-    order: 1,
+    order: 2,
     unlockAt: { era: "prehistoric", condition: "core-complete" },
-    // use previous-era resources to unlock
     unlockCost: [
-      { resource: "food", amount: 500 },
-      { resource: "tools", amount: 150 }
+      { resource: "chrono", amount: 150 },
+      { resource: "tools", amount: 150 } // previous era's secondary[0]
     ],
     resources: {
-      primary: ["grain"],     // main = grain
-      secondary: ["stone"]    // gate = stone
+      primary: ["grain"],
+      secondary: ["stone"]
     },
     upgrades: [
       {
@@ -82,18 +112,19 @@ export const ERAS = [
     ]
   },
 
+  // ---- 3: Medieval ----
   {
     id: "medieval",
     name: "Medieval Age",
-    order: 2,
+    order: 3,
     unlockAt: { era: "ancient", condition: "core-complete" },
     unlockCost: [
-      { resource: "grain", amount: 1500 },
-      { resource: "stone", amount: 600 }
+      { resource: "chrono", amount: 750 },
+      { resource: "stone", amount: 600 } // previous era's secondary[0]
     ],
     resources: {
-      primary: ["gold"],     // main = gold
-      secondary: ["iron"]    // gate = iron
+      primary: ["gold"],
+      secondary: ["iron"]
     },
     upgrades: [
       {
@@ -126,18 +157,19 @@ export const ERAS = [
     ]
   },
 
+  // ---- 4: Renaissance ----
   {
     id: "renaissance",
     name: "Renaissance",
-    order: 3,
+    order: 4,
     unlockAt: { era: "medieval", condition: "core-complete" },
     unlockCost: [
-      { resource: "gold", amount: 4500 },
-      { resource: "iron", amount: 1200 }
+      { resource: "chrono", amount: 3000 },
+      { resource: "iron", amount: 1200 } // previous era's secondary[0]
     ],
     resources: {
-      primary: ["gold"],   // main still gold
-      secondary: ["paper"] // gate = paper
+      primary: ["gold"],
+      secondary: ["paper"]
     },
     upgrades: [
       {
@@ -173,18 +205,19 @@ export const ERAS = [
     ]
   },
 
+  // ---- 5: Industrial ----
   {
     id: "industrial",
     name: "Industrial Age",
-    order: 4,
+    order: 5,
     unlockAt: { era: "renaissance", condition: "core-complete" },
     unlockCost: [
-      { resource: "gold", amount: 12000 },
-      { resource: "paper", amount: 1500 }
+      { resource: "chrono", amount: 12000 },
+      { resource: "paper", amount: 1500 } // previous era's secondary[0]
     ],
     resources: {
-      primary: ["manufactured-goods"], // main
-      secondary: ["coal"]              // gate
+      primary: ["manufactured-goods"],
+      secondary: ["coal"]
     },
     upgrades: [
       {
@@ -220,19 +253,19 @@ export const ERAS = [
     ]
   },
 
-  // ---- Phase 6 new eras ----
+  // ---- 6: Modern ----
   {
     id: "modern",
     name: "Modern Age",
-    order: 5,
+    order: 6,
     unlockAt: { era: "industrial", condition: "core-complete" },
     unlockCost: [
-      { resource: "manufactured-goods", amount: 30000 },
-      { resource: "coal", amount: 6000 }
+      { resource: "chrono", amount: 45000 },
+      { resource: "coal", amount: 6000 } // previous era's secondary[0]
     ],
     resources: {
-      primary: ["consumer-goods"],        // main
-      secondary: ["oil", "electricity"]   // gates
+      primary: ["consumer-goods"],
+      secondary: ["oil", "electricity"]
     },
     upgrades: [
       {
@@ -277,18 +310,19 @@ export const ERAS = [
     ]
   },
 
+  // ---- 7: Digital ----
   {
     id: "digital",
     name: "Digital Age",
-    order: 6,
+    order: 7,
     unlockAt: { era: "modern", condition: "core-complete" },
     unlockCost: [
-      { resource: "consumer-goods", amount: 90000 },
-      { resource: "electricity", amount: 15000 }
+      { resource: "chrono", amount: 150000 },
+      { resource: "electricity", amount: 15000 } // previous era's secondary[0]
     ],
     resources: {
-      primary: ["services"],               // main
-      secondary: ["data", "renewables"]    // gates
+      primary: ["services"],
+      secondary: ["data", "renewables"]
     },
     upgrades: [
       {
@@ -330,18 +364,19 @@ export const ERAS = [
     ]
   },
 
+  // ---- 8: Near Future ----
   {
     id: "near-future",
     name: "Near Future",
-    order: 7,
+    order: 8,
     unlockAt: { era: "digital", condition: "core-complete" },
     unlockCost: [
-      { resource: "services", amount: 220000 },
-      { resource: "data", amount: 50000 }
+      { resource: "chrono", amount: 500000 },
+      { resource: "data", amount: 50000 } // previous era's secondary[0]
     ],
     resources: {
-      primary: ["advanced-goods"],                     // main
-      secondary: ["energy-credits", "synthetic-materials"] // gates
+      primary: ["advanced-goods"],
+      secondary: ["energy-credits", "synthetic-materials"]
     },
     upgrades: [
       {
@@ -383,18 +418,19 @@ export const ERAS = [
     ]
   },
 
+  // ---- 9: Interstellar ----
   {
     id: "interstellar",
     name: "Interstellar Age",
-    order: 8,
+    order: 9,
     unlockAt: { era: "near-future", condition: "core-complete" },
     unlockCost: [
-      { resource: "advanced-goods", amount: 500000 },
-      { resource: "energy-credits", amount: 120000 }
+      { resource: "chrono", amount: 1600000 },
+      { resource: "energy-credits", amount: 120000 } // previous era's secondary[0]
     ],
     resources: {
-      primary: ["stellar-industry"],          // main
-      secondary: ["stellar-energy", "exotic-matter"] // gates
+      primary: ["stellar-industry"],
+      secondary: ["stellar-energy", "exotic-matter"]
     },
     upgrades: [
       {
@@ -437,12 +473,13 @@ export const ERAS = [
   }
 ];
 
-// Optional: resource metadata for icons/labels and grouping.
-// Group "primary" gets a higher default base rate; others use secondary.
+// Resource metadata (Chrono is primary).
 export const RESOURCE_META = {
+  chrono: { label: "Chrono", group: "primary", icon: "⏳" },
+
   // Early game
   food: { label: "Food", group: "primary", icon: "🍖" },
-  tools: { label: "Tools", group: "primary", icon: "🪓" },
+  tools: { label: "Tools", group: "secondary", icon: "🪓" }, // gate in Prehistoric
   grain: { label: "Grain", group: "primary", icon: "🌾" },
   stone: { label: "Stone", group: "secondary", icon: "🪨" },
   iron: { label: "Iron", group: "secondary", icon: "⛓️" },
@@ -473,4 +510,3 @@ export const RESOURCE_META = {
   "stellar-energy": { label: "Stellar Energy", group: "secondary", icon: "☀️" },
   "exotic-matter": { label: "Exotic Matter", group: "secondary", icon: "🌀" }
 };
-
