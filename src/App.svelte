@@ -1,25 +1,10 @@
 <script>
   import { onMount } from 'svelte';
-  import {
-    state,
-    rate,
-    startTicker,
-    buyUpgrade,
-    advanceEra
-  } from './lib/stores';
+  import { state, rate, startTicker, buyUpgrade, advanceEra } from './lib/stores';
 
-  // subscribe to stores
-  let $state;
-  let $rate;
-  const unsubState = state.subscribe(v => ($state = v));
-  const unsubRate = rate.subscribe(v => ($rate = v));
-
+  // Svelte will auto-subscribe: you can use $state and $rate directly in markup or JS.
   onMount(() => {
     startTicker();
-    return () => {
-      unsubState();
-      unsubRate();
-    };
   });
 
   // ---- helpers for UI ----
@@ -28,8 +13,10 @@
     if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(2) + 'B';
     if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + 'M';
     if (n >= 1_000) return (n / 1_000).toFixed(2) + 'K';
-    return n.toFixed(2);
+    return Number(n).toFixed(2);
   };
+
+  const label = (key) => key?.replace(/-/g, ' ') ?? '';
 
   const costText = (cost) => {
     if (!cost || cost.length === 0) return 'Free';
@@ -37,14 +24,13 @@
     return arr.map(c => `${fmt(c.amount)} ${label(c.resource)}`).join(' + ');
   };
 
-  const label = (key) => key?.replace(/-/g, ' ') ?? '';
-
   const canAfford = (cost) => {
     if (!cost || cost.length === 0) return true;
     const arr = Array.isArray(cost) ? cost : [cost];
-    return arr.every(c => ($state.resources[c.resource]?.amount ?? 0) >= c.amount);
+    return arr.every(c => (($state.resources[c.resource]?.amount) ?? 0) >= c.amount);
   };
 </script>
+
 
 <style>
   :global(body) {
