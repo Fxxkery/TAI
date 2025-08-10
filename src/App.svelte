@@ -56,7 +56,7 @@
   const handleDoPrestige  = ()      => doPrestige();
 
 
-  const closeAllPopovers = () => { showMenu=false; showHunts=false; showResearch=false; };
+  const closeAllPopovers = () => { showMenu=false; showHunts=false; showResearch=false; showPrestige = false; };
 </script>
 
 <!-- Banner -->
@@ -167,9 +167,6 @@
   <div class="backdrop" on:click={closeAllPopovers}></div>
   <div class="popover pop-menu">
     <div class="pop-title">Menu</div>
-    <button class="btn ghost" on:click={() => showResources = !showResources}>
-      Toggle Era Resources
-    </button>
     <button class="btn ghost" on:click={hardReset}>Hard Reset</button>
     <div class="muted" style="margin-top:8px;">(Save/Load coming soon)</div>
   </div>
