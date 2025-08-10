@@ -1,7 +1,14 @@
 <script>
   import './app.css';
   import { onMount } from 'svelte';
-  import { state, rate, startTicker, buyUpgrade, advanceEra, hardReset } from './lib/stores';
+  import {
+    state, rate, startTicker, buyUpgrade, advanceEra, hardReset,
+    // v6 systems:
+    startHunt, claimHunt,
+    buyResearch, chooseEraFocus, RESEARCH_V6,
+    previewInsightGain, doPrestige
+  } from './lib/stores';
+
   import { RESOURCE_META } from './lib/data/eras';
 
   onMount(() => startTicker());
@@ -33,11 +40,21 @@
   let showMenu = false;
   let showHunts = false;
   let showResearch = false;
+  let showPrestige = false;
 
   const toggleResources = () => (showResources = !showResources);
   const toggleMenu = () => (showMenu = !showMenu);
   const toggleHunts = () => { showHunts = !showHunts; showResearch = false; showMenu = false; };
   const toggleResearch = () => { showResearch = !showResearch; showHunts = false; showMenu = false; };
+  const togglePrestige = () => { showPrestige = !showPrestige; showHunts = false; showResearch = false; showMenu = false; };
+  
+  // v6 handlers
+  const handleStartHunt   = (eraId) => startHunt(eraId);
+  const handleClaimHunt   = (id)    => claimHunt(id);
+  const handleBuyResearch = (id)    => buyResearch(id);
+  const handleChooseFocus = (id)    => chooseEraFocus(id);
+  const handleDoPrestige  = ()      => doPrestige();
+
 
   const closeAllPopovers = () => { showMenu=false; showHunts=false; showResearch=false; };
 </script>
@@ -49,7 +66,7 @@
 
     <div class="top-pills">
       <div class="stat-pill tva">+{$rate.totalPerSec.toFixed(2)}/s</div>
-      <div class="stat-pill">Insights: 0</div>
+      <div class="stat-pill">Insights: {$state.insights}</div>
       <div class="stat-pill">Unlocked: {$state.eras.filter(e=>e.unlocked).length}</div>
     </div>
 
@@ -60,6 +77,7 @@
       </button>
       <button class="btn olive-pill" on:click={toggleHunts}>Hunts</button>
       <button class="btn olive-pill" on:click={toggleResearch}>Research</button>
+      <button class="btn olive-pill" on:click={togglePrestige}>Prestige</button>
     </div>
 
     <!-- Right side: Menu pill -->
@@ -161,7 +179,34 @@
   <div class="backdrop" on:click={closeAllPopovers}></div>
   <div class="popover pop-hunts">
     <div class="pop-title">Hunts</div>
-    <div class="muted">Hunts system is being ported. For now, this is a placeholder.</div>
+    <p class="muted">Start a timed hunt in an unlocked era. When it finishes, claim it to gain a permanent artifact bonus.</p>
+
+    <div class="row wrap gap">
+      {#each $state.eras.filter(e => e.unlocked) as e}
+        <button class="btn" on:click={() => handleStartHunt(e.id)}>Start in {e.name}</button>
+      {/each}
+    </div>
+
+    <div class="section-title">Active Hunts</div>
+    {#if $state.hunts.missions.length === 0}
+      <div class="muted">No hunts in progress.</div>
+    {:else}
+      <ul class="list">
+        {#each $state.hunts.missions as m}
+          <li class="row between">
+            <div>
+              #{m.id} • {m.rarity} • ends at {new Date(m.endTime).toLocaleTimeString()}
+              {#if m.rewardReady}<span class="badge success">Ready</span>{/if}
+            </div>
+            <button class="btn" disabled={!m.rewardReady} on:click={() => handleClaimHunt(m.id)}>
+              {m.rewardReady ? 'Claim' : 'Pending'}
+            </button>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+
+    <div class="hint">Artifact bonus: {($state.artifactBonus * 100).toFixed(2)}%</div>
   </div>
 {/if}
 
@@ -169,6 +214,51 @@
   <div class="backdrop" on:click={closeAllPopovers}></div>
   <div class="popover pop-research">
     <div class="pop-title">Research</div>
-    <div class="muted">Research tree will return with the new data model.</div>
+
+    <ul class="list">
+      {#each RESEARCH_V6 as r}
+        <li>
+          <div class="row between">
+            <div>
+              <strong>{r.name}</strong>
+              <div class="muted">{r.desc}</div>
+              <div class="costs">
+                {#each r.cost as c}
+                  <span class="chip">{c.amount} {c.resource}</span>
+                {/each}
+              </div>
+            </div>
+            <button class="btn"
+                    disabled={$state.research.nodes[r.id]}
+                    on:click={() => handleBuyResearch(r.id)}>
+              {$state.research.nodes[r.id] ? 'Purchased' : 'Buy'}
+            </button>
+          </div>
+        </li>
+      {/each}
+    </ul>
+
+    <div class="section-title">Era Focus (+20%)</div>
+    <div class="row">
+      <select on:change={(e) => handleChooseFocus(e.target.value)}>
+        <option value=''>— none —</option>
+        {#each $state.eras.filter(e => e.unlocked) as e}
+          <option value={e.id} selected={$state.research.chosenEra === e.id}>{e.name}</option>
+        {/each}
+      </select>
+    </div>
+  </div>
+{/if}
+
+{#if showPrestige}
+  <div class="backdrop" on:click={closeAllPopovers}></div>
+  <div class="popover pop-prestige">
+    <div class="pop-title">Prestige</div>
+    <p>Convert progress into <strong>Insights</strong> that permanently boost all production by +5% each.</p>
+    <div class="row between">
+      <div>Projected Insights: {previewInsightGain()}</div>
+      <button class="btn danger" on:click={handleDoPrestige}>Prestige Now</button>
+    </div>
+    <div class="hint">Current Insights: {$state.insights}</div>
   </div>
 {/if}
