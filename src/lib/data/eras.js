@@ -11,6 +11,7 @@ export const ERAS = [
     unlockAt: null,               // starting era
     unlockCost: [],               // no cost; starts unlocked
     resources: {
+      chrono: { label: "Chrono", group: "primary", icon: "⏳" }, // Main game resource
       primary: ["food", "tools"], // main = food, gate = tools
       secondary: []
     },
@@ -472,3 +473,4 @@ export const RESOURCE_META = {
   "stellar-energy": { label: "Stellar Energy", group: "secondary", icon: "☀️" },
   "exotic-matter": { label: "Exotic Matter", group: "secondary", icon: "🌀" }
 };
+
