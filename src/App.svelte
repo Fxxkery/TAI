@@ -90,25 +90,6 @@
   </div>
 </header>
 
-<!-- Toggle row -->
-<nav class="toggle-row">
-  <button class="btn" on:click={() => showPanel = 'hunts'}>Hunts</button>
-  <button class="btn" on:click={() => showPanel = 'research'}>Research</button>
-  <div class="dropdown">
-    <button class="btn" on:click={() => eraMenu = !eraMenu}>Era Resources</button>
-    {#if eraMenu}
-      <div class="dropdown-panel">
-        {#each $state?.eras || [] as era}
-          {#if era.unlocked}
-            <div class="row">{era.name} — {fmt(era.resource || 0)}</div>
-          {/if}
-        {/each}
-      </div>
-    {/if}
-  </div>
-</nav>
-
-
 <!-- Toggle buttons -->
 <nav class="tva-togglebar">
   <div class="left">
@@ -186,15 +167,35 @@
   {/if}
 </main>
 {#if statsOpen}
-  <div class="overlay" on:click={()=> statsOpen=false}>
-    <div class="stats-modal card" on:click|stopPropagation>
-      <header><h3>Game Stats</h3></header>
+  <div
+    class="overlay"
+    role="button"
+    tabindex="0"
+    aria-label="Close stats overlay"
+    on:click={() => (statsOpen = false)}
+    on:keydown={(e) => {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+        e.preventDefault();
+        statsOpen = false;
+      }
+    }}
+  >
+    <div
+      class="stats-modal card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="stats-title"
+      on:click|stopPropagation
+    >
+      <header><h3 id="stats-title">Game Stats</h3></header>
+
       <section class="grid two">
         <div class="statline"><span>Total CE generated</span><b>{fmt($state?.totalEarned || 0)}</b></div>
         <div class="statline"><span>Current CE</span><b>{fmt($state?.ce || 0)}</b></div>
         <div class="statline"><span>Insights</span><b>{fmt($state?.insights || 0)}</b></div>
         <div class="statline"><span>Prestiges</span><b>—</b></div>
       </section>
+
       <section>
         <h4>Era Resources</h4>
         <div class="grid two">
@@ -203,14 +204,19 @@
           {/each}
         </div>
       </section>
+
       <section class="grid two">
         <div class="statline"><span>Total Agents Hired</span><b>{$state?.eras?.reduce((a,e)=>a+(e.agentsOwned||0),0)}</b></div>
         <div class="statline"><span>Upgrades Purchased</span><b>{$state?.eras?.reduce((a,e)=>a+(e.upgrades?.filter(u=>u.purchased).length||0),0)}</b></div>
       </section>
-      <footer class="actions"><button class="btn primary" on:click={()=> statsOpen=false}>Close</button></footer>
+
+      <footer class="actions">
+        <button class="btn primary" on:click={() => (statsOpen = false)}>Close</button>
+      </footer>
     </div>
   </div>
 {/if}
+
 
 <!-- Bottom scrollable era cards -->
 <section class="era-row-wrap">
